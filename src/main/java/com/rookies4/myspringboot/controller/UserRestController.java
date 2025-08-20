@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/api/users1")
 public class UserRestController {
     private final UserRepository userRepository;
 
@@ -33,16 +34,18 @@ public class UserRestController {
 
     //전체목록 조회
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public List<UserEntity> getUsers() {
         return userRepository.findAll();
     }
     //ID로 조회
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public UserEntity getUser(@PathVariable Long id){
         UserEntity existUser = getExistUser(id);
         return existUser;
     }
-    //Email로 조회하고, 수정
+    //Email로 조회하고, 수정하기
     @PatchMapping("/{email}/")
     public UserEntity updateUser(@PathVariable String email, @RequestBody UserEntity userDetail){
         UserEntity existUser = userRepository.findByEmail(email) //Optional<UserEntity>
@@ -53,7 +56,7 @@ public class UserRestController {
         UserEntity updateUser = userRepository.save(existUser);
         return updateUser;
     }
-    //삭제
+    //삭제하기
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id){
         UserEntity existUser = getExistUser(id);
@@ -70,4 +73,9 @@ public class UserRestController {
         return existUser;
     }
 
+    //인증 없이 접근 가능한 메서드
+    @GetMapping("/welcome")
+    public String welcome() {
+        return "Welcome this endpoint is not secure";
+    }
 }
